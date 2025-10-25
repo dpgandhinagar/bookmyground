@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Cricket Ground Bookings</title>
+    <link rel="stylesheet" href="templatemo-sleeky-pro.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="header" id="header">
+        <nav class="nav-container">
+            <a href="index.html" class="logo-container">
+                <span class="logo-text">ADMIN PANEL</span>
+            </a>
+        </nav>
+    </header>
+
+    <section class="section admin" style="margin-top: 100px;">
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">Booking Enquiries</h2>
+            </div>
+            
+            <div class="admin-filters">
+                <input type="date" id="filterDate" onchange="filterBookings()">
+                <select id="filterSlot" onchange="filterBookings()">
+                    <option value="">All Slots</option>
+                    <option value="06:00-08:00">06:00 AM - 08:00 AM</option>
+                    <option value="08:00-10:00">08:00 AM - 10:00 AM</option>
+                    <!-- Add all slots -->
+                </select>
+            </div>
+
+            <div class="bookings-table">
+                <table id="bookingsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time Slot</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Mobile</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsBody">
+                        <!-- Bookings will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <script src="admin.js"></script>
+</body>
+</html>

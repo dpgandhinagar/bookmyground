@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Cricket Ground Bookings</title>
+    <link rel="stylesheet" href="templatemo-sleeky-pro.css">
+    <!-- Fix Supabase initialization -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js" type="module"></script>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav-container">
+            <h1>Admin Dashboard</h1>
+            <div class="admin-controls">
+                <input type="date" id="filterDate" class="date-filter">
+                <button onclick="clearFilter()" class="clear-btn">Clear Filter</button>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="admin-container">
+        <div class="booking-stats">
+            <h3>Total Bookings: <span id="totalBookings">0</span></h3>
+        </div>
+
+        <table class="bookings-table">
+            <thead>
+                <tr>
+                    <th>Booking Date</th>
+                    <th>Time Slot</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="bookingsTableBody"></tbody>
+        </table>
+    </main>
+
+    <script type="module">
+        // Get Supabase instance
+        const supabaseClient = supabase.createClient(
+            'https://jyailcsclxjzcnyrnsic.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5YWlsY3NjbHhqemNueXJuc2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MjM1OTksImV4cCI6MjA2MTM5OTU5OX0.TVh104V8SnfeRTWywzYU96j-7uKtbzX6Tf8kjQbPwKk'
+        );
+
+        // Check authentication
+        if (!localStorage.getItem('adminLoggedIn')) {
+            window.location.href = 'index.html#admin-login';
+        }
+
+        // Load bookings
+        async function loadBookings(date = null) {
+            try {
+                let query = supabaseClient
+                    .from('bookings')
+                    .select('*')
+                    .order('booking_date', { ascending: false });
+
+                if (date) {
+                    query = query.eq('booking_date', date);
+                }
+
+                const { data, error } = await query;
+                
+                if (error) {
+                    throw error;
+                }
+
+                console.log('Fetched bookings:', data); // Debug log
+                displayBookings(data || []);
+            } catch (error) {
+                console.error('Error fetching bookings:', error);
+                alert('Error loading bookings. Please check console for details.');
+            }
+        }
+
+        function displayBookings(bookings) {
+            const tbody = document.getElementById('bookingsTableBody');
+            const totalSpan = document.getElementById('totalBookings');
+            tbody.innerHTML = '';
+            
+            console.log('Displaying bookings:', bookings.length); // Debug log
+            totalSpan.textContent = bookings.length;
+
+            bookings.forEach(booking => {
+                const tr = document.createElement('tr');
+                const bookingDate = new Date(booking.booking_date).toLocaleDateString();
+                tr.innerHTML = `
+                    <td>${bookingDate}</td>
+                    <td>${booking.slot}</td>
+                    <td>${booking.name}</td>
+                    <td>${booking.email}</td>
+                    <td>${booking.mobile}</td>
+                    <td>${booking.status || 'Pending'}</td>
+                    <td>
+                        <button onclick="updateStatus('${booking.id}', 'confirmed')" 
+                            class="action-btn confirm-btn" 
+                            ${booking.status === 'confirmed' ? 'disabled' : ''}>
+                            Confirm
+                        </button>
+                        <button onclick="updateStatus('${booking.id}', 'rejected')"
+                            class="action-btn reject-btn"
+                            ${booking.status === 'rejected' ? 'disabled' : ''}>
+                            Reject
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Make functions available globally
+        window.clearFilter = function() {
+            document.getElementById('filterDate').value = '';
+            loadBookings();
+        };
+
+        window.updateStatus = async function(bookingId, status) {
+            try {
+                const { error } = await supabaseClient
+                    .from('bookings')
+                    .update({ status: status })
+                    .eq('id', bookingId);
+
+                if (error) throw error;
+                
+                loadBookings(document.getElementById('filterDate').value);
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Error updating booking status');
+            }
+        };
+
+        // Event Listeners
+        document.getElementById('filterDate').addEventListener('change', (e) => {
+            const selectedDate = e.target.value;
+            if (selectedDate) {
+                loadBookings(selectedDate);
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('adminLoggedIn');
+            window.location.href = 'index.html';
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Loading initial bookings...'); // Debug log
+            loadBookings();
+        });
+    </script>
+</body>
+</html>
