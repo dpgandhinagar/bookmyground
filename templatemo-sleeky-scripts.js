@@ -28,26 +28,26 @@ class VerticalCubeSlider {
         
         this.images = [
             {
-                url: 'images/crick1.jpg',
-                thumb: 'images/crick1.jpg',
+                url: 'crick1.jpg',
+                thumb: 'crick1.jpg',
                 title: 'DAY-VIEW',
                 description: 'Day view of the cricket ground at Gandhinagar district'
             },
             {
-                url: 'images/crick2.jpg',
-                thumb: 'images/crick2.jpg',
+                url: 'crick2.jpg',
+                thumb: 'crick2.jpg',
                 title: 'NIGHT-VIEW',
                 description: 'Night view of the cricket ground at Gandhinagar district'
             },
             {
-                url: 'images/crick3.jpeg',
-                thumb: 'images/crick3.jpeg',
+                url: 'crick3.jpeg',
+                thumb: 'crick3.jpeg',
                 title: 'LIGHTS-ON-VIEW',
                 description: 'view of the cricket ground under Lights'
             },
             {
-               url: 'images/crick4.jpg',
-                thumb: 'images/crick4.jpg',
+               url: 'crick4.jpg',
+                thumb: 'crick4.jpg',
                 title: 'PITCH-VIEW',
                 description: 'view of the cricket pitch at ground'
             },
@@ -514,4 +514,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize slider
     new VerticalCubeSlider();
+
 });
