@@ -1470,6 +1470,51 @@ html {
     background: #f1f1f1;
 }
 
+/* Slot picker styles */
+.slot-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.slot-btn {
+    min-width: 160px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: #f5f5f5;
+    color: #111;
+    cursor: pointer;
+    opacity: 0.25;               /* low opacity by default */
+    transition: opacity 150ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+
+.slot-btn:hover:not(:disabled) {
+    opacity: 0.5;
+    transform: translateY(-1px);
+}
+
+.slot-btn.selected {
+    opacity: 1;
+    background: #dff7df;        /* light green */
+    border-color: #60c66a;
+    color: #0b6d1b;
+    box-shadow: 0 2px 6px rgba(36,128,63,0.12);
+}
+
+.slot-btn.booked {
+    opacity: 1;
+    background: #ffecec;        /* light red */
+    border-color: #e04b4b;
+    color: #8a1b1b;
+    cursor: not-allowed;
+}
+
+.slot-btn:disabled {
+    pointer-events: none;
+}
+
 /* Mobile Styles */
 @media (max-width: 768px) {
     .nav-menu {
