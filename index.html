@@ -266,21 +266,9 @@ https://templatemo.com/tm-598-sleeky-pro
                         </div>
 
                         <div class="form-group">
-                            <label for="slot">Select Slot (2-hour each)</label>
-                            <select id="slot" name="slot" required>
-                                <option value="">-- Choose a slot --</option>
-                                <option value="06:00-08:00">06:00 AM - 08:00 AM</option>
-                                <option value="08:00-10:00">08:00 AM - 10:00 AM</option>
-                                <option value="10:00-12:00">10:00 AM - 12:00 PM</option>
-                                <option value="12:00-14:00">12:00 PM - 02:00 PM</option>
-                                <option value="14:00-16:00">02:00 PM - 04:00 PM</option>
-                                <option value="16:00-18:00">04:00 PM - 06:00 PM</option>
-                                <option value="18:00-20:00">06:00 PM - 08:00 PM</option>
-                                <option value="20:00-22:00">08:00 PM - 10:00 PM</option>
-                                <option value="22:00-00:00">10:00 PM - 12:00 AM</option>
-                                <option value="00:00-02:00">12:00 AM - 02:00 AM</option>
-                                <option value="02:00-04:00">02:00 AM - 04:00 AM</option>
-                            </select>
+                            <label for="slotPicker">Select Slot (2-hour each)</label>
+                            <div id="slotPicker" class="slot-picker" aria-label="Select time slots"></div>
+                            <input type="hidden" id="selectedSlots" name="selectedSlots">
                         </div>
                         
                         <button type="submit" class="submit-btn">BOOK SLOT</button>
