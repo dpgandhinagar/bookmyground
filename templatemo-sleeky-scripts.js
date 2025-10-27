@@ -402,18 +402,111 @@ document.addEventListener('DOMContentLoaded', () => {
     // Contact form handling
     const contactForm = document.getElementById('contactForm');
     const bookingDateInput = document.getElementById('bookingDate');
+    const slotPickerEl = document.getElementById('slotPicker');
+    const selectedSlotsInput = document.getElementById('selectedSlots');
+
     if (bookingDateInput) {
         // set minimum date to today
         bookingDateInput.min = new Date().toISOString().split('T')[0];
     }
 
+    // Define 2-hour slots
+    const SLOT_DEFINITIONS = [
+        { id: '06:00-08:00', label: '06:00 AM - 08:00 AM' },
+        { id: '08:00-10:00', label: '08:00 AM - 10:00 AM' },
+        { id: '10:00-12:00', label: '10:00 AM - 12:00 PM' },
+        { id: '12:00-14:00', label: '12:00 PM - 02:00 PM' },
+        { id: '14:00-16:00', label: '02:00 PM - 04:00 PM' },
+        { id: '16:00-18:00', label: '04:00 PM - 06:00 PM' },
+        { id: '18:00-20:00', label: '06:00 PM - 08:00 PM' },
+        { id: '20:00-22:00', label: '08:00 PM - 10:00 PM' },
+        { id: '22:00-00:00', label: '10:00 PM - 12:00 AM' },
+        { id: '00:00-02:00', label: '12:00 AM - 02:00 AM' },
+        { id: '02:00-04:00', label: '02:00 AM - 04:00 AM' }
+    ];
+
+    let selectedSlots = new Set();
+
+    async function fetchBookedSlotsForDate(dateStr) {
+        if (!dateStr) return [];
+        try {
+            const { data, error } = await supabaseClient
+                .from('bookings')
+                .select('slot')
+                .eq('booking_date', dateStr);
+            if (error) {
+                console.error('Error fetching booked slots:', error);
+                return [];
+            }
+            return (data || []).map(r => r.slot);
+        } catch (err) {
+            console.error(err);
+            return [];
+        }
+    }
+
+    async function renderSlotPicker(dateStr) {
+        if (!slotPickerEl) return;
+        slotPickerEl.innerHTML = '';
+        selectedSlots.clear();
+        updateSelectedSlotsInput();
+
+        const booked = await fetchBookedSlotsForDate(dateStr);
+
+        SLOT_DEFINITIONS.forEach(s => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'slot-btn';
+            btn.dataset.slot = s.id;
+            btn.textContent = s.label;
+
+            const isBooked = booked.includes(s.id);
+            if (isBooked) {
+                btn.classList.add('booked');
+                btn.disabled = true;
+                btn.title = 'Already booked';
+            } else {
+                btn.addEventListener('click', () => {
+                    // toggle selection
+                    if (btn.classList.contains('selected')) {
+                        btn.classList.remove('selected');
+                        selectedSlots.delete(s.id);
+                    } else {
+                        btn.classList.add('selected');
+                        selectedSlots.add(s.id);
+                    }
+                    updateSelectedSlotsInput();
+                });
+            }
+
+            slotPickerEl.appendChild(btn);
+        });
+    }
+
+    function updateSelectedSlotsInput() {
+        // store comma separated list for debugging/submission (not used by DB directly)
+        if (selectedSlotsInput) selectedSlotsInput.value = Array.from(selectedSlots).join(',');
+    }
+
+    // Re-render when date changes
+    if (bookingDateInput) {
+        bookingDateInput.addEventListener('change', (e) => {
+            renderSlotPicker(e.target.value);
+        });
+
+        // initial render with today's min value (if any)
+        document.addEventListener('DOMContentLoaded', () => {
+            if (bookingDateInput.value) renderSlotPicker(bookingDateInput.value);
+        });
+    }
+
     if (contactForm) {
         contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
-            
+
             // basic validation
             const mobileRaw = (data.mobile || '').toString();
             const mobile = mobileRaw.replace(/\D/g, '');
@@ -425,43 +518,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Please select a booking date.');
                 return;
             }
-            if (!data.slot) {
-                alert('Please select a slot.');
+
+            // if user hasn't clicked any buttons, try reading selectedSlotsInput (fallback)
+            const selected = Array.from(selectedSlots.length ? selectedSlots : (selectedSlotsInput && selectedSlotsInput.value ? selectedSlotsInput.value.split(',').filter(Boolean) : []));
+            if (selected.length === 0) {
+                alert('Please select at least one slot.');
                 return;
             }
-            
-            // Submit to Supabase
+
+            // create one booking row per selected slot
+            const bookingsToInsert = selected.map(slotId => ({
+                name: data.name,
+                email: data.email,
+                mobile: mobile,
+                booking_date: data.bookingDate,
+                slot: slotId,
+                status: 'pending'
+            }));
+
             const { error } = await supabaseClient
                 .from('bookings')
-                .insert([
-                    {
-                        name: data.name,
-                        email: data.email,
-                        mobile: mobile,
-                        booking_date: data.bookingDate,
-                        slot: data.slot,
-                        status: 'pending'
-                    }
-                ]);
+                .insert(bookingsToInsert);
 
             if (error) {
-                console.error('Error submitting booking:', error)
-                alert('There was an error submitting your booking. Please try again.')
-                return
+                console.error('Error submitting bookings:', error);
+                alert('There was an error submitting your booking(s). Please try again.');
+                return;
             }
 
             alert(
                 `Thank you ${data.name}!\n\n` +
-                `Booking request received:\n` +
-                `Email: ${data.email}\n` +
-                `Mobile: ${mobile}\n` +
-                `Date: ${data.bookingDate}\n` +
-                `Slot: ${data.slot}\n\n` +
+                `Booking request(s) received for ${bookingsToInsert.length} slot(s) on ${data.bookingDate}.\n` +
                 `Our team will contact you to confirm availability and payment.`
             );
-            
+
             e.target.reset();
             if (bookingDateInput) bookingDateInput.min = new Date().toISOString().split('T')[0];
+            // re-render to refresh booked state
+            if (bookingDateInput && bookingDateInput.value) renderSlotPicker(bookingDateInput.value);
         });
     }
 
